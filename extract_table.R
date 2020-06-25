@@ -6,7 +6,10 @@ library(pdftools)
 ## this version determines how to parse the pdf based
 ## on the year
 # pull one pdf from 2015 
-pdf <- list.files(path = "appendix_f/", pattern = "*2017.pdf", full.names = TRUE)
+pdf <- list.files(path = "data/", pattern = "*2017.pdf", full.names = TRUE)
+pdf <- list.files(path = "data/", pattern = "*2013.pdf", full.names = TRUE)
+pdf <- list.files(path = "data/", pattern = "*2012.pdf", full.names = TRUE)
+pdf <- list.files(path = "data/", pattern = "*2015.pdf", full.names = TRUE)
 pdf <- pdf[1]
 extract_table <- function(pdf) {
   require(lubridate)
@@ -21,8 +24,9 @@ extract_table <- function(pdf) {
                       as.Date(paste0("01",substr(pdf, nchar(pdf) -11, nchar(pdf) - 4)), format = "%d%b%Y"),
                       pdf_date)
   year <- lubridate::year(pdf_date)
-  # 2014 ----
-  if(year == 2014) {
+
+  # 2012 - 2014 ----
+  if(year %in% c(2012, 2013, 2014)) {
     print(paste("Pdf date: ", pdf_date))
     pages <- pdf_text(pdf)
     # find table 3 
@@ -57,11 +61,25 @@ extract_table <- function(pdf) {
       table_df <- table_df %>%
         # group by states 
         mutate(state = X2) %>%
-        # keep only states 
-        # this code matches the text in the community name variable to actual states 
-        mutate(state = ifelse(str_detect(state, paste0(state.name, collapse = "|")), state, NA)) %>%
         # bring forward states
         mutate(state = zoo::na.locf.default(state)) %>%
+        # get rid of (continued)
+        mutate(state = gsub(pattern = "(continued)", "", state, fixed = TRUE)) %>%
+        # fix messed up state names ----
+        mutate(state = gsub(pattern = "Hawaii County", "Hawaii", state, fixed = TRUE)) %>%
+        mutate(state = gsub(pattern = "Indianapolis, City of", "Indiana", state, fixed = TRUE)) %>%
+        mutate(state = gsub(pattern = "Washington, City of", "North Carolina", state, fixed = TRUE)) %>%
+        mutate(state = gsub(pattern = "Washington County", "North Carolina", state, fixed = TRUE)) %>%
+        mutate(state = gsub(pattern = "Iowa City, City of", "Iowa", state, fixed = TRUE)) %>%
+        mutate(state = gsub(pattern = "Kansas City, City of", "Kansas", state, fixed = TRUE)) %>%
+        mutate(state = gsub(pattern = "Missouri City, City of", "Texas", state, fixed = TRUE)) %>%
+        mutate(state = gsub(pattern = "New Jersey Meadowlands", "New Jersey", state, fixed = TRUE)) %>%
+        mutate(state = gsub(pattern = "Oregon City, City of", "Oregon", state, fixed = TRUE)) %>%
+        mutate(state = gsub(pattern = "Delaware City, City of", "Delaware", state, fixed = TRUE)) %>%
+        mutate(state = gsub(pattern = "Colorado Springs, City of", "Colorado", state, fixed = TRUE)) %>%
+        mutate(state = gsub(pattern = "Washington Park, Town of", "North Carolina", state, fixed = TRUE)) %>%
+        # this code matches the text in the community name variable to actual states 
+        mutate(state = ifelse(str_detect(state, paste0(state.name, collapse = "|")), state, NA)) %>%
         # drop state headers
         filter(!is.na(X1)) %>%
         # separate X5 on spaces 
@@ -127,7 +145,21 @@ extract_table <- function(pdf) {
     table_df <- table_df %>%
       # group by states 
       mutate(state = X2) %>%
-      # keep only states 
+      # get rid of (continued)
+      mutate(state = gsub(pattern = "(continued)", "", state, fixed = TRUE)) %>%
+      # fix messed up state names ----
+      mutate(state = gsub(pattern = "Hawaii County", "Hawaii", state, fixed = TRUE)) %>%
+      mutate(state = gsub(pattern = "Indianapolis, City of", "Indiana", state, fixed = TRUE)) %>%
+      mutate(state = gsub(pattern = "Washington, City of", "North Carolina", state, fixed = TRUE)) %>%
+      mutate(state = gsub(pattern = "Washington County", "North Carolina", state, fixed = TRUE)) %>%
+      mutate(state = gsub(pattern = "Iowa City, City of", "Iowa", state, fixed = TRUE)) %>%
+      mutate(state = gsub(pattern = "Kansas City, City of", "Kansas", state, fixed = TRUE)) %>%
+      mutate(state = gsub(pattern = "Missouri City, City of", "Texas", state, fixed = TRUE)) %>%
+      mutate(state = gsub(pattern = "New Jersey Meadowlands", "New Jersey", state, fixed = TRUE)) %>%
+      mutate(state = gsub(pattern = "Oregon City, City of", "Oregon", state, fixed = TRUE)) %>%
+      mutate(state = gsub(pattern = "Delaware City, City of", "Delaware", state, fixed = TRUE)) %>%
+      mutate(state = gsub(pattern = "Colorado Springs, City of", "Colorado", state, fixed = TRUE)) %>%
+      mutate(state = gsub(pattern = "Washington Park, Town of", "North Carolina", state, fixed = TRUE)) %>%
       # this code matches the text in the community name variable to actual states 
       mutate(state = ifelse(str_detect(state, paste0(state.name, collapse = "|")), state, NA)) %>%
       # bring forward states
@@ -341,12 +373,19 @@ extract_table <- function(pdf) {
 
 
 # tests ----
-pdf <- list.files(path = "appendix_f", pattern = "2015.pdf", full.names = TRUE)
-apr2015 <- extract_table(pdf = pdf[1])
+pdf <- list.files(path = "data", pattern = "2015.pdf", full.names = TRUE)
+temp <- extract_table(pdf = pdf[1])
+table(temp$state)
 nov2015 <- extract_table(pdf = pdf[2])
-pdf <- list.files(path = "appendix_f", pattern = "2014.pdf", full.names = TRUE)
+pdf <- list.files(path = "data", pattern = "2014.pdf", full.names = TRUE)
 jun2014 <- extract_table(pdf = pdf[1])
-oct2014 <- extract_table(pdf = pdf[2])
+temp <- extract_table(pdf = pdf[2])
+pdf <- list.files(path = "data", pattern = "2013.pdf", full.names = TRUE)
+temp <- extract_table(pdf = pdf[1])
+table(temp$state)
+pdf <- list.files(path = "data", pattern = "2012.pdf", full.names = TRUE)
+temp <- extract_table(pdf = pdf[1])
+table(temp$state)
 
 temp <- rbind(apr2015, nov2015, jun2014, oct2014)
 
