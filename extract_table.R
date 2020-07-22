@@ -5,11 +5,9 @@ library(pdftools)
 ## extract table from given pdf page
 ## this version determines how to parse the pdf based
 ## on the year
-# pull one pdf from 2015 
-pdf <- list.files(path = "data/", pattern = "*2017.pdf", full.names = TRUE)
-pdf <- list.files(path = "data/", pattern = "*2013.pdf", full.names = TRUE)
-pdf <- list.files(path = "data/", pattern = "*2012.pdf", full.names = TRUE)
-pdf <- list.files(path = "data/", pattern = "*2015.pdf", full.names = TRUE)
+## TESTS
+pdf <- list.files(path = "data/", pattern = "*2011.pdf", full.names = TRUE)
+
 pdf <- pdf[1]
 extract_table <- function(pdf) {
   require(lubridate)
